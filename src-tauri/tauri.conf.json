@@ -1,9 +1,9 @@
 {
   "build": {
-    "beforeBuildCommand": "",
+    "beforeBuildCommand": "pnpm run build",
     "beforeDevCommand": "pnpm run dev",
     "devPath": "http://localhost:5173",
-    "distDir": "../frontend",
+    "distDir": "../frontend/dist",
     "withGlobalTauri": true
   },
   "package": {
@@ -15,26 +15,14 @@
       "all": false,
       "dialog": {
         "all": false,
-        "ask": false,
-        "confirm": false,
-        "message": false,
-        "open": true,
-        "save": false
+        "open": true
       },
       "fs": {
         "all": false,
-        "copyFile": false,
-        "createDir": false,
-        "exists": false,
         "readDir": true,
-        "readFile": false,
-        "removeDir": false,
-        "removeFile": false,
-        "renameFile": false,
         "scope": [
           "**"
-        ],
-        "writeFile": false
+        ]
       },
       "path": {
         "all": true
@@ -59,7 +47,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "Dependency Graph",
+        "title": "Dependency Graph By IAFEnvoy",
         "width": 800,
         "height": 600
       }

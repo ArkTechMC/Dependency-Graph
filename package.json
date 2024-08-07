@@ -13,6 +13,7 @@
     "@tauri-apps/cli": "^1.4.0"
   },
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
     "dependency-graph": "file:",
     "roc-charts": "^1.0.4",
     "vite": "^5.3.5"

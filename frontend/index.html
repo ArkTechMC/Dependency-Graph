@@ -10,7 +10,24 @@
 </head>
 
 <body>
-  <button id="open-folder">选择文件夹</button>
+  <fieldset style="display:flex;">
+    <legend>Control</legend>
+    <button id="open-folder">选择文件夹</button>
+    <div>
+      <label style="display:flex;">
+        <input type="radio" name="loader" id="forge">
+        <div>Minecraft Forge</div>
+      </label>
+      <label style="display:flex;">
+        <input type="radio" name="loader" id="fabric">
+        <div>Fabric Loader</div>
+      </label>
+      <label style="display:flex;">
+        <input type="radio" name="loader" id="neoforge">
+        <div>Neoforge</div>
+      </label>
+    </div>
+  </fieldset>
   <div id="chart" style="position:relative;width:700px;height:400px;"></div>
 </body>
 

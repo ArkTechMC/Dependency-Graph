@@ -1,8 +1,8 @@
 import Chart from 'roc-charts'
 
 const tauri = window.tauri = window.__TAURI__
-let chart, data = {}, processingFiles = [], modData = {}, modIdMapping = {}
-const ignoreModId = ['*', 'minecraft', 'fabricloader', 'java']
+let chart, chartData = {}, processingFiles = [], modData = {}, modIdMapping = {}
+const ignoreModId = ['*', 'minecraft', 'java']
 
 window.onload = _ => {
   document.getElementById("open-folder").onclick = openModFolder
@@ -10,8 +10,9 @@ window.onload = _ => {
     let index = processingFiles.indexOf(e.payload.file)
     if (index == -1 || !e.payload.success) return
     processingFiles.splice(index, 1)
+    console.log(e.payload)
     try {
-      let json = JSON.parse(e.payload.data)
+      let json = JSON.parse(e.payload.fabric_data)
       modIdMapping[json.id] = modData[e.payload.file] = json
     } catch (e) {
       console.log(e)
@@ -20,10 +21,11 @@ window.onload = _ => {
   })
   createChart()
 }
+
 window.onresize = e => {
   let chart = document.getElementById('chart')
   chart.style.width = (e.target.innerWidth - 20) + 'px'
-  chart.style.height = (e.target.innerHeight - 70) + 'px'
+  chart.style.height = (e.target.innerHeight - 180) + 'px'
   removeChart()
   createChart()
 }
@@ -32,19 +34,28 @@ const createChart = _ => {
   window.chart = chart = new Chart({
     id: 'chart',  // 绘制图谱 dom 的 id
     type: 'force',  // 图谱类型
-    data: data,  // 图谱数据
+    data: structuredClone(chartData),  // 图谱数据
   })
-  chart.init()
+  chart.init({
+    core: {
+      animation: true
+    }
+  })
 }
 
 const removeChart = _ => {
-  chart.destroy()
+  document.getElementById('chart').innerHTML = ''
   window.chart = chart = null
 }
 
 const loadMods = async folder => {
-  modData = {}
-  modIdMapping = {}
+  let fabricLoader = {
+    id: 'fabricloader',
+    name: "Fabric Loader",
+    version: ''
+  }
+  modData = { FabricLoader: fabricLoader }
+  modIdMapping = { fabricloader: fabricLoader }
   let files = await tauri.fs.readDir(folder, { recursive: false })
   console.log(files)
   for (let { path, children } of files) {
@@ -64,20 +75,64 @@ const loadGraph = _ => {
         size: 'normal'
       }
     })
-    if (!d.depends) return
-    Object.keys(d.depends).forEach(depend => {
-      if (ignoreModId.indexOf(depend) == -1 && modIdMapping[depend]) {
+    //depends
+    if (d.depends) Object.keys(d.depends).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
         links.push({
           from: d.id,
-          to: depend,
-          text: '依赖于',
+          to: id,
+          text: '强制依赖',
+          directionless: false
+        })
+      }
+    })
+    //depends
+    if (d.recommends) Object.keys(d.recommends).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+        links.push({
+          from: d.id,
+          to: id,
+          text: '建议依赖',
+          directionless: false
+        })
+      }
+    })
+    //suggests
+    if (d.suggests) Object.keys(d.suggests).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+        links.push({
+          from: d.id,
+          to: id,
+          text: '联动',
+          directionless: false
+        })
+      }
+    })
+    //breaks
+    if (d.breaks) Object.keys(d.breaks).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+        links.push({
+          from: d.id,
+          to: id,
+          text: '严重冲突',
+          directionless: false
+        })
+      }
+    })
+    //conflicts
+    if (d.conflicts) Object.keys(d.conflicts).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+        links.push({
+          from: d.id,
+          to: id,
+          text: '可能冲突',
           directionless: false
         })
       }
     })
   })
-  data = { nodes, links }
-  console.log(data)
+  chartData = { nodes, links }
+  console.log(chartData)
   removeChart()
   createChart()
 }
