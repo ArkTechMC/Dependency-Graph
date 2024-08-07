@@ -1,0 +1,20 @@
+{
+  "name": "dependency-graph",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "cd frontend && set RUST_BACKTRACE=1 && vite",
+    "build": "cd frontend && set RUST_BACKTRACE=1 && vite build",
+    "preview": "cd frontend && set RUST_BACKTRACE=1 && vite preview"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.4.0"
+  },
+  "dependencies": {
+    "dependency-graph": "file:",
+    "roc-charts": "^1.0.4",
+    "vite": "^5.3.5"
+  }
+}
