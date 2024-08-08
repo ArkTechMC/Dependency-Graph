@@ -102,14 +102,24 @@ async fn read_mod_icon(zip: String, path: String, app: tauri::AppHandle) {
     let mut success = false;
     let mut data = String::new();
     if let Ok(zipfile) = File::open(path_ptr) {
-        let mut zip = ZipArchive::new(zipfile).unwrap();
-        if let Ok(icon) = zip.by_name(&path) {
-            let mut icon_data = Box::new(icon);
-            let mut buf = Vec::new();
-            let size = icon_data.read_to_end(&mut buf).unwrap();
-            data = base64::encode(&buf, size);
-            success = true;
-        };
+        match ZipArchive::new(zipfile) {
+            Ok(mut zip) => {
+                if let Ok(icon) = zip.by_name(&path) {
+                    let mut icon_data = Box::new(icon);
+                    let mut buf = Vec::new();
+                    let size = icon_data.read_to_end(&mut buf).unwrap();
+                    data = base64::encode(&buf, size);
+                    success = true;
+                };
+            }
+            Err(err) => {
+                let _ = app.emit_all("mod-icon-read", ImagePayload { 
+                    success: success,
+                    file: (&path_ptr).to_string(), 
+                    data: err.to_string()
+                });
+            }
+        }
     }
     let _ = app.emit_all("mod-icon-read", ImagePayload { 
         success: success,

@@ -1,17 +1,17 @@
 import { load } from 'js-toml'
 
 export const root = {
-    'forge': {
+    forge: {
         id: 'forge',
         name: "Minecraft Forge",
         version: ''
     },
-    'fabric': {
+    fabric: {
         id: 'fabricloader',
         name: "Fabric Loader",
         version: ''
     },
-    'neoforge': {
+    neoforge: {
         id: 'neoforge',
         name: "Neoforge",
         version: ''
@@ -19,13 +19,13 @@ export const root = {
 }
 
 export const dataParser = {
-    'forge': s => load(s.forge_data),
-    'fabric': s => JSON.parse(s.fabric_data),
-    'neoforge': s => load(s.neoforge_data),
+    forge: s => load(s.forge_data),
+    fabric: s => JSON.parse(s.fabric_data),
+    neoforge: s => load(s.neoforge_data),
 }
 
 export const configResolver = {
-    'forge': obj => {
+    forge: obj => {
         let mod = obj.mods[0], depends = obj.dependencies?.[mod.modId]
         return {
             id: mod.modId,
@@ -36,7 +36,7 @@ export const configResolver = {
             recommends: depends.filter(x => !x.mandatory).map(x => x.modId),
         }
     },
-    'fabric': obj => {
+    fabric: obj => {
         return {
             id: obj.id,
             name: obj.name,
@@ -49,7 +49,7 @@ export const configResolver = {
             conflicts: Object.keys(obj.conflicts ?? {}),
         }
     },
-    'neoforge': obj => {
+    neoforge: obj => {
         let mod = obj.mods[0], depends = obj.dependencies[mod.modId]
         return {
             id: mod.modId,

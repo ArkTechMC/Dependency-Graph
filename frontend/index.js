@@ -1,12 +1,13 @@
 import Chart from 'roc-charts'
 import { configResolver, dataParser, root } from './static'
+import { getBase64 } from './base64'
 
 const tauri = window.tauri = window.__TAURI__
-let chart, chartData = {}, processingFiles = [], processingIcon = [], modData = {}, modIdMapping = {}, imageMap = {}
+let chart, chartData = {}, processingFiles = [], processingIcon = [], modData = {}, modIdMapping = {}, imageMap = {}, builtinIcons = {}
 const ignoreModId = ['*', 'minecraft', 'java']
 let currentLoader = 'fabric'
 
-window.onload = _ => {
+window.onload = async _ => {
   document.getElementById("open-folder").onclick = openModFolder
   tauri.event.listen('mod-config-read', e => {
     let index = processingFiles.indexOf(e.payload.file)
@@ -35,9 +36,13 @@ window.onload = _ => {
     processingIcon.splice(index, 1)
     if (!e.payload.success) return
     console.log(e.payload)
-    imageMap[modData[e.payload.file]?.id] = e.payload.data
+    imageMap[modData[e.payload.file]?.id] = 'data:image/png;base64,' + e.payload.data
     if (processingIcon.length == 0) loadGraph()
   })
+  builtinIcons.forge = await getBase64('/assets/forge.webp').catch(console.log)
+  builtinIcons.fabricloader = await getBase64('/assets/fabric.png').catch(console.log)
+  builtinIcons.neoforge = await getBase64('/assets/neoforge.png').catch(console.log)
+  builtinIcons.unknown = await getBase64('/assets/unknown.png').catch(console.log)
   createChart()
 }
 
@@ -83,7 +88,7 @@ const loadMods = async folder => {
   modData[rootNode.name] = rootNode
   modIdMapping = {}
   modIdMapping[rootNode.id] = rootNode
-  imageMap = {}
+  imageMap = structuredClone(builtinIcons)
   let files = await tauri.fs.readDir(folder, { recursive: false })
   console.log(files)
   for (let { path, children } of files) {
@@ -102,7 +107,7 @@ const loadGraph = _ => {
       name: d.name + '\n' + d.version,
       style: {
         size: 'normal',
-        image: imageMap[d.id] ? `data:image/png;base64,${imageMap[d.id]}` : undefined,
+        image: imageMap[d.id] ? imageMap[d.id] : imageMap.unknown,
       },
     })
     //depends
@@ -171,7 +176,7 @@ const openModFolder = async _ => {
   const selected = await tauri.dialog.open({
     directory: true,
     multiple: false,
-    defaultPath: await tauri.path.appDir(),
+    defaultPath: await tauri.path.desktopDir(),
   })
   if (!selected) return
   loadMods(selected)
