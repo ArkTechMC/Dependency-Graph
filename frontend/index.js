@@ -1,23 +1,42 @@
 import Chart from 'roc-charts'
+import { configResolver, dataParser, root } from './static'
 
 const tauri = window.tauri = window.__TAURI__
-let chart, chartData = {}, processingFiles = [], modData = {}, modIdMapping = {}
+let chart, chartData = {}, processingFiles = [], processingIcon = [], modData = {}, modIdMapping = {}, imageMap = {}
 const ignoreModId = ['*', 'minecraft', 'java']
+let currentLoader = 'fabric'
 
 window.onload = _ => {
   document.getElementById("open-folder").onclick = openModFolder
   tauri.event.listen('mod-config-read', e => {
     let index = processingFiles.indexOf(e.payload.file)
-    if (index == -1 || !e.payload.success) return
+    if (index == -1) return
     processingFiles.splice(index, 1)
-    console.log(e.payload)
+    if (!e.payload.success) return
     try {
-      let json = JSON.parse(e.payload.fabric_data)
-      modIdMapping[json.id] = modData[e.payload.file] = json
+      let obj = dataParser[currentLoader](e.payload)
+      console.log(obj)
+      let data = configResolver[currentLoader](obj)
+      modIdMapping[data.id] = modData[e.payload.file] = data
+      processingIcon.push(e.payload.file)
+      const f = e.payload.file
+      tauri.invoke('read_mod_icon', { zip: f, path: data.logo }).catch(e => {
+        let index = processingIcon.indexOf(f)
+        if (index >= 0) processingIcon.splice(index, 1)
+        console.log(e)
+      })
     } catch (e) {
       console.log(e)
     }
-    if (processingFiles.length == 0) loadGraph()
+  })
+  tauri.event.listen('mod-icon-read', e => {
+    let index = processingIcon.indexOf(e.payload.file)
+    if (index == -1) return
+    processingIcon.splice(index, 1)
+    if (!e.payload.success) return
+    console.log(e.payload)
+    imageMap[modData[e.payload.file]?.id] = e.payload.data
+    if (processingIcon.length == 0) loadGraph()
   })
   createChart()
 }
@@ -28,6 +47,12 @@ window.onresize = e => {
   chart.style.height = (e.target.innerHeight - 180) + 'px'
   removeChart()
   createChart()
+}
+
+const updateLoaderType = _ => {
+  for (let i of ['forge', 'fabric', 'neoforge'])
+    if (document.getElementById(i).checked)
+      currentLoader = i
 }
 
 const createChart = _ => {
@@ -49,13 +74,16 @@ const removeChart = _ => {
 }
 
 const loadMods = async folder => {
-  let fabricLoader = {
-    id: 'fabricloader',
-    name: "Fabric Loader",
-    version: ''
-  }
-  modData = { FabricLoader: fabricLoader }
-  modIdMapping = { fabricloader: fabricLoader }
+  updateLoaderType()
+  console.log(`Current Mod Loader: ${currentLoader}, start loading mods.`)
+  let rootNode = root[currentLoader]
+  processingFiles = []
+  processingIcon = []
+  modData = {}
+  modData[rootNode.name] = rootNode
+  modIdMapping = {}
+  modIdMapping[rootNode.id] = rootNode
+  imageMap = {}
   let files = await tauri.fs.readDir(folder, { recursive: false })
   console.log(files)
   for (let { path, children } of files) {
@@ -66,67 +94,69 @@ const loadMods = async folder => {
 }
 
 const loadGraph = _ => {
+  console.log(modIdMapping)
   let nodes = [], links = []
   Object.values(modData).forEach(d => {
     nodes.push({
       id: d.id,
       name: d.name + '\n' + d.version,
       style: {
-        size: 'normal'
-      }
+        size: 'normal',
+        image: imageMap[d.id] ? `data:image/png;base64,${imageMap[d.id]}` : undefined,
+      },
     })
     //depends
-    if (d.depends) Object.keys(d.depends).forEach(id => {
+    if (d.depends) d.depends.forEach(id => {
       if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
         links.push({
           from: d.id,
           to: id,
           text: '强制依赖',
-          directionless: false
+          directionless: false,
         })
       }
     })
     //depends
-    if (d.recommends) Object.keys(d.recommends).forEach(id => {
+    if (d.recommends) d.recommends.forEach(id => {
       if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
         links.push({
           from: d.id,
           to: id,
           text: '建议依赖',
-          directionless: false
+          directionless: false,
         })
       }
     })
     //suggests
-    if (d.suggests) Object.keys(d.suggests).forEach(id => {
+    if (d.suggests) d.suggests.forEach(id => {
       if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
         links.push({
           from: d.id,
           to: id,
           text: '联动',
-          directionless: false
+          directionless: false,
         })
       }
     })
     //breaks
-    if (d.breaks) Object.keys(d.breaks).forEach(id => {
+    if (d.breaks) d.breaks.forEach(id => {
       if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
         links.push({
           from: d.id,
           to: id,
           text: '严重冲突',
-          directionless: false
+          directionless: false,
         })
       }
     })
     //conflicts
-    if (d.conflicts) Object.keys(d.conflicts).forEach(id => {
+    if (d.conflicts) d.conflicts.forEach(id => {
       if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
         links.push({
           from: d.id,
           to: id,
           text: '可能冲突',
-          directionless: false
+          directionless: false,
         })
       }
     })
