@@ -118,6 +118,9 @@ const loadGraph = _ => {
           to: id,
           text: '强制依赖',
           directionless: false,
+          style: {
+            stroke: '#75F94D',
+          },
         })
       }
     })
@@ -129,6 +132,9 @@ const loadGraph = _ => {
           to: id,
           text: '建议依赖',
           directionless: false,
+          style: {
+            stroke: '#73FBFD',
+          },
         })
       }
     })
@@ -140,6 +146,9 @@ const loadGraph = _ => {
           to: id,
           text: '联动',
           directionless: false,
+          style: {
+            stroke: '#808080',
+          },
         })
       }
     })
@@ -151,6 +160,9 @@ const loadGraph = _ => {
           to: id,
           text: '严重冲突',
           directionless: false,
+          style: {
+            stroke: '#EB3324',
+          },
         })
       }
     })
@@ -162,6 +174,9 @@ const loadGraph = _ => {
           to: id,
           text: '可能冲突',
           directionless: false,
+          style: {
+            stroke: '#F08650',
+          },
         })
       }
     })
