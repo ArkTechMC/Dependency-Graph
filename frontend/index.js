@@ -39,10 +39,10 @@ window.onload = async _ => {
     imageMap[modData[e.payload.file]?.id] = 'data:image/png;base64,' + e.payload.data
     if (processingIcon.length == 0) loadGraph()
   })
-  builtinIcons.forge = await getBase64('/assets/forge.webp').catch(console.log)
-  builtinIcons.fabricloader = await getBase64('/assets/fabric.png').catch(console.log)
-  builtinIcons.neoforge = await getBase64('/assets/neoforge.png').catch(console.log)
-  builtinIcons.unknown = await getBase64('/assets/unknown.png').catch(console.log)
+  builtinIcons.forge = await getBase64('/img/forge.webp').catch(console.log)
+  builtinIcons.fabricloader = await getBase64('/img/fabric.png').catch(console.log)
+  builtinIcons.neoforge = await getBase64('/img/neoforge.png').catch(console.log)
+  builtinIcons.unknown = await getBase64('/img/unknown.png').catch(console.log)
   createChart()
 }
 

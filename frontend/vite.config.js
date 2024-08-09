@@ -1,5 +1,5 @@
 export default {
-    // publicDir: './'
+    // publicDir: './',
     build: {
         rollupOptions: {
             input: [
