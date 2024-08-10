@@ -27,6 +27,7 @@ fn read_file_by_line<File>(file: File) -> Result<Lines<BufReader<File>>>where Fi
 struct ConfigPayload {
     success: bool,
     file: String,
+    forge_legacy_data: String,
     forge_data: String,
     fabric_data: String,
     neoforge_data: String,
@@ -36,52 +37,67 @@ struct ConfigPayload {
 //Dont delete this async, or software will no response
 async fn read_mod_config(path: String, app: tauri::AppHandle) {
     let path_ptr = &path;
+    let mut forge_legacy_data = String::new();
     let mut forge_data = String::new();
     let mut fabric_data = String::new();
     let mut neoforge_data = String::new();
     let mut success = false;
     if let Ok(zipfile) = File::open(path_ptr) {
-        let mut zip = ZipArchive::new(zipfile).unwrap();
-        //Forge
-        if let Ok(forge_config) = zip.by_name("META-INF/mods.toml") {
-            if let Ok(lines) = read_file_by_line(forge_config) {
-                for line in lines {
-                    if let Ok(ip) = line {
-                        forge_data.push_str(&ip);
-                        forge_data.push_str("\n");
-                    }      
+        if let Ok(mut zip) = ZipArchive::new(zipfile) {
+            //Forge Legacy
+            if let Ok(forge_legacy_config) = zip.by_name("mcmod.info") {
+                if let Ok(lines) = read_file_by_line(forge_legacy_config) {
+                    for line in lines {
+                        if let Ok(ip) = line {
+                            forge_legacy_data.push_str(&ip);
+                            forge_legacy_data.push_str("\n");
+                        }      
+                    }
+                    success = true;
                 }
-                success = true;
-            }
-        };
-        //Fabric
-        if let Ok(fabric_config) = zip.by_name("fabric.mod.json") {
-            if let Ok(lines) = read_file_by_line(fabric_config) {
-                for line in lines {
-                    if let Ok(ip) = line {
-                        fabric_data.push_str(&ip);
-                        fabric_data.push_str("\n");
-                    }      
+            };
+            //Forge
+            if let Ok(forge_config) = zip.by_name("META-INF/mods.toml") {
+                if let Ok(lines) = read_file_by_line(forge_config) {
+                    for line in lines {
+                        if let Ok(ip) = line {
+                            forge_data.push_str(&ip);
+                            forge_data.push_str("\n");
+                        }      
+                    }
+                    success = true;
                 }
-                success = true;
-            }
-        };
-        //Neoforge
-        if let Ok(neoforge_config) = zip.by_name("META-INF/neoforge.mods.toml") {
-            if let Ok(lines) = read_file_by_line(neoforge_config) {
-                for line in lines {
-                    if let Ok(ip) = line {
-                        neoforge_data.push_str(&ip);
-                        neoforge_data.push_str("\n");
-                    }      
+            };
+            //Fabric
+            if let Ok(fabric_config) = zip.by_name("fabric.mod.json") {
+                if let Ok(lines) = read_file_by_line(fabric_config) {
+                    for line in lines {
+                        if let Ok(ip) = line {
+                            fabric_data.push_str(&ip);
+                            fabric_data.push_str("\n");
+                        }      
+                    }
+                    success = true;
                 }
-                success = true;
-            }
-        };
+            };
+            //Neoforge
+            if let Ok(neoforge_config) = zip.by_name("META-INF/neoforge.mods.toml") {
+                if let Ok(lines) = read_file_by_line(neoforge_config) {
+                    for line in lines {
+                        if let Ok(ip) = line {
+                            neoforge_data.push_str(&ip);
+                            neoforge_data.push_str("\n");
+                        }      
+                    }
+                    success = true;
+                }
+            };
+        }
     }
     let _ = app.emit_all("mod-config-read", ConfigPayload { 
         success: success,
         file: (&path_ptr).to_string(), 
+        forge_legacy_data: forge_legacy_data,
         forge_data: forge_data,
         fabric_data: fabric_data,
         neoforge_data: neoforge_data
@@ -118,6 +134,7 @@ async fn read_mod_icon(zip: String, path: String, app: tauri::AppHandle) {
                     file: (&path_ptr).to_string(), 
                     data: err.to_string()
                 });
+                return;
             }
         }
     }

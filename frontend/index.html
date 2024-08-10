@@ -13,9 +13,12 @@
 
 <body>
   <fieldset style="display:flex;">
-    <legend>Control</legend>
     <button id="open-folder">选择文件夹</button>
     <div>
+      <label style="display:flex;">
+        <input type="radio" name="loader" id="forge_legacy">
+        <div>Minecraft Forge (Legacy)</div>
+      </label>
       <label style="display:flex;">
         <input type="radio" name="loader" id="forge">
         <div>Minecraft Forge</div>
@@ -29,8 +32,27 @@
         <div>Neoforge</div>
       </label>
     </div>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <div>
+      <label style="display:flex;">
+        <input type="checkbox" id="animation">
+        <div>动画（多了会卡）</div>
+      </label>
+    </div>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <div id="loading-process"></div>
   </fieldset>
-  <div id="chart" style="position:relative;width:700px;height:400px;"></div>
+  <div id="main" style="display:flex;height:420px;">
+    <div class="info-container" style="flex:4;">
+      <div class="info-map" id="chart"></div>
+    </div>
+    <div class="info-card" id="infomation" style="flex:1;">
+      <fieldset>
+        <img id="mod-logo" style="height:48px;image-rendering:pixelated;">
+        <div id="mod-detail"> </div>
+      </fieldset>
+    </div>
+  </div>
 </body>
 
 </html>

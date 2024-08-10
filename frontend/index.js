@@ -3,9 +3,9 @@ import { configResolver, dataParser, root } from './static'
 import { getBase64 } from './base64'
 
 const tauri = window.tauri = window.__TAURI__
-let chart, chartData = {}, processingFiles = [], processingIcon = [], modData = {}, modIdMapping = {}, imageMap = {}, builtinIcons = {}
+let chart, chartData = {}, processingFiles = [], processingIcon = [], modData = {}, modIdMapping = {}, imageMap = {}, builtinIcons = {}, totalMods = 0
 const ignoreModId = ['*', 'minecraft', 'java']
-let currentLoader = 'fabric'
+let currentLoader = 'fabric', currentDisplayMod = 'unknown'
 
 window.onload = async _ => {
   document.getElementById("open-folder").onclick = openModFolder
@@ -21,6 +21,7 @@ window.onload = async _ => {
       modIdMapping[data.id] = modData[e.payload.file] = data
       processingIcon.push(e.payload.file)
       const f = e.payload.file
+      updateLoadingStatus()
       tauri.invoke('read_mod_icon', { zip: f, path: data.logo }).catch(e => {
         let index = processingIcon.indexOf(f)
         if (index >= 0) processingIcon.splice(index, 1)
@@ -28,6 +29,7 @@ window.onload = async _ => {
       })
     } catch (e) {
       console.log(e)
+      updateLoadingStatus()
     }
   })
   tauri.event.listen('mod-icon-read', e => {
@@ -37,30 +39,46 @@ window.onload = async _ => {
     if (!e.payload.success) return
     console.log(e.payload)
     imageMap[modData[e.payload.file]?.id] = 'data:image/png;base64,' + e.payload.data
-    if (processingIcon.length == 0) loadGraph()
+    updateLoadingStatus()
   })
   builtinIcons.forge = await getBase64('/img/forge.webp').catch(console.log)
   builtinIcons.fabricloader = await getBase64('/img/fabric.png').catch(console.log)
   builtinIcons.neoforge = await getBase64('/img/neoforge.png').catch(console.log)
   builtinIcons.unknown = await getBase64('/img/unknown.png').catch(console.log)
+  imageMap = structuredClone(builtinIcons)
+  fillDetail()
   createChart()
 }
 
 window.onresize = e => {
-  let chart = document.getElementById('chart')
-  chart.style.width = (e.target.innerWidth - 20) + 'px'
-  chart.style.height = (e.target.innerHeight - 180) + 'px'
+  let main = document.getElementById('main')
+  // main.style.width = (e.target.innerWidth - 20) + 'px'
+  main.style.height = (e.target.innerHeight - 180) + 'px'
   removeChart()
   createChart()
 }
 
+const fillDetail = _ => {
+  document.getElementById('mod-logo').src = imageMap[currentDisplayMod] ?? builtinIcons.unknown
+  if (modIdMapping[currentDisplayMod]) {
+    let data = modIdMapping[currentDisplayMod]
+    document.getElementById('mod-detail').innerHTML = `<h3>${data.name}</h3>作者：${data.authors.join(', ')}<br>${data.description ?? '暂无简介'}<br>版本：${data.version ?? '暂无版本'}`
+  } else document.getElementById('mod-detail').innerHTML = ''
+}
+
 const updateLoaderType = _ => {
-  for (let i of ['forge', 'fabric', 'neoforge'])
+  for (let i of ['forge_legacy', 'forge', 'fabric', 'neoforge'])
     if (document.getElementById(i).checked)
       currentLoader = i
 }
 
 const createChart = _ => {
+  Chart.changeConfig({
+    text: {
+      color: '#000',
+      fontSize: 15,
+    }
+  })
   window.chart = chart = new Chart({
     id: 'chart',  // 绘制图谱 dom 的 id
     type: 'force',  // 图谱类型
@@ -68,9 +86,27 @@ const createChart = _ => {
   })
   chart.init({
     core: {
-      animation: true
-    }
+      animation: document.getElementById('animation').checked
+    },
+    chart: {
+      force: {
+        tickCount: 100
+      },
+    },
   })
+  chart.addEventListener('click', (target) => {
+    const source = target?.source;
+    if (source) {
+      // 通过 category 判断元素类型
+      if (source.category === 'node') {
+        currentDisplayMod = source.id
+      } else if (source.category === 'link') {
+        // 点击元素为线，source 为这条线对象
+      }
+    } else
+      currentDisplayMod = 'unknown'
+    fillDetail()
+  });
 }
 
 const removeChart = _ => {
@@ -88,12 +124,15 @@ const loadMods = async folder => {
   modData[rootNode.name] = rootNode
   modIdMapping = {}
   modIdMapping[rootNode.id] = rootNode
+  totalMods = 0
   imageMap = structuredClone(builtinIcons)
   let files = await tauri.fs.readDir(folder, { recursive: false })
   console.log(files)
   for (let { path, children } of files) {
     if (children) continue
+    totalMods++
     processingFiles.push(path)
+    updateLoadingStatus()
     tauri.invoke('read_mod_config', { path: path })
   }
 }
@@ -195,4 +234,13 @@ const openModFolder = async _ => {
   })
   if (!selected) return
   loadMods(selected)
+}
+
+const updateLoadingStatus = _ => {
+  let dom = document.getElementById('loading-process')
+  dom.innerHTML = `解析元数据：${totalMods - processingFiles.length}/${totalMods}<br>解析Logo：${totalMods - processingFiles.length - processingIcon.length}/${totalMods}`
+  if (processingFiles.length == 0 && processingIcon.length == 0) {
+    dom.innerHTML += '<br>加载完成'
+    loadGraph()
+  }
 }
