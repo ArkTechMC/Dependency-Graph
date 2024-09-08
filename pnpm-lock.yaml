@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      compare-versions:
+        specifier: ^6.1.1
+        version: 6.1.1
       dependency-graph:
         specifier: 'file:'
         version: 'file:'
@@ -184,9 +187,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@iarna/toml@2.2.5':
-    resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
-
   '@rollup/rollup-android-arm-eabi@4.20.0':
     resolution: {integrity: sha512-TSpWzflCc4VGAUJZlPpgAJE1+V60MePDQnBd7PPkpuEmOy8i87aL6tinFGKBFKuEDikYpig72QzdT3QPYIi+oA==}
     cpu: [arm]
@@ -337,6 +337,9 @@ packages:
 
   chevrotain@11.0.3:
     resolution: {integrity: sha512-ci2iJH6LeIkvP9eJW6gpueU8cnZhv85ELY8w8WiFtNjMHA5ad6pQLaJo9mEly/9qUyCpvqX8/POVUTf18/HFdw==}
+
+  compare-versions@6.1.1:
+    resolution: {integrity: sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg==}
 
   core-js-pure@3.38.0:
     resolution: {integrity: sha512-8balb/HAXo06aHP58mZMtXgD8vcnXz9tUDePgqBgJgKdmTlMt+jw3ujqniuBDQXMvTzxnMpxHFeuSM3g1jWQuQ==}
@@ -511,8 +514,6 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
-  '@iarna/toml@2.2.5': {}
-
   '@rollup/rollup-android-arm-eabi@4.20.0':
     optional: true
 
@@ -615,11 +616,12 @@ snapshots:
       '@chevrotain/utils': 11.0.3
       lodash-es: 4.17.21
 
+  compare-versions@6.1.1: {}
+
   core-js-pure@3.38.0: {}
 
   'dependency-graph@file:':
     dependencies:
-      '@iarna/toml': 2.2.5
       js-toml: 1.0.0
       roc-charts: 1.0.4
       vite: 5.3.5

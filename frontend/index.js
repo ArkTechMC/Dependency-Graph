@@ -1,6 +1,7 @@
 import Chart from 'roc-charts'
 import { configResolver, dataParser, root } from './static'
 import { getBase64 } from './base64'
+import { satisfies } from 'compare-versions'
 
 const tauri = window.tauri = window.__TAURI__
 let chart, chartData = {}, processingFiles = [], processingIcon = [], modData = {}, modIdMapping = {}, imageMap = {}, builtinIcons = {}, totalMods = 0
@@ -137,6 +138,16 @@ const loadMods = async folder => {
   }
 }
 
+const versionCheck = (ori, range) => {
+  console.log(ori, range)
+  try {
+    return satisfies(ori, range)
+  } catch (e) {
+    console.log(e)
+    return true
+  }
+}
+
 const loadGraph = _ => {
   console.log(modIdMapping)
   let nodes = [], links = []
@@ -150,8 +161,8 @@ const loadGraph = _ => {
       },
     })
     //depends
-    if (d.depends) d.depends.forEach(id => {
-      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+    Object.keys(d.depends ?? {}).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id] && versionCheck(modIdMapping[id].version, d.depends[id])) {
         links.push({
           from: d.id,
           to: id,
@@ -164,8 +175,8 @@ const loadGraph = _ => {
       }
     })
     //depends
-    if (d.recommends) d.recommends.forEach(id => {
-      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+    Object.keys(d.recommends ?? {}).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id] && versionCheck(modIdMapping[id].version, d.depends[id])) {
         links.push({
           from: d.id,
           to: id,
@@ -178,8 +189,8 @@ const loadGraph = _ => {
       }
     })
     //suggests
-    if (d.suggests) d.suggests.forEach(id => {
-      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+    Object.keys(d.suggests ?? {}).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id] && versionCheck(modIdMapping[id].version, d.depends[id])) {
         links.push({
           from: d.id,
           to: id,
@@ -192,8 +203,8 @@ const loadGraph = _ => {
       }
     })
     //breaks
-    if (d.breaks) d.breaks.forEach(id => {
-      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+    Object.keys(d.breaks ?? {}).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id] && versionCheck(modIdMapping[id].version, d.depends[id])) {
         links.push({
           from: d.id,
           to: id,
@@ -206,8 +217,8 @@ const loadGraph = _ => {
       }
     })
     //conflicts
-    if (d.conflicts) d.conflicts.forEach(id => {
-      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id]) {
+    Object.keys(d.conflicts ?? {}).forEach(id => {
+      if (ignoreModId.indexOf(id) == -1 && modIdMapping[id] && versionCheck(modIdMapping[id].version, d.depends[id])) {
         links.push({
           from: d.id,
           to: id,

@@ -40,7 +40,7 @@ export const configResolver = {
             authors: mod.authorList,
             description: mod.description,
             logo: mod.logoFile,
-            depends: mod.dependencies,
+            depends: mod.dependencies.reduce((p, c) => { p[c] = '*'; return p }, {}),
         }
     },
     forge: obj => {
@@ -52,8 +52,8 @@ export const configResolver = {
             authors: mod.authors.split(', '),
             description: obj.description ?? mod.description,
             logo: obj.logoFile ?? obj.modproperties?.[mod.modId].catalogueImageIcon,
-            depends: depends.filter(x => x.mandatory).map(x => x.modId),
-            recommends: depends.filter(x => !x.mandatory).map(x => x.modId),
+            depends: depends.filter(x => x.mandatory).map(x => x.modId).reduce((p, c) => { p[c] = '*'; return p }, {}),//Forge not support version check.
+            recommends: depends.filter(x => !x.mandatory).map(x => x.modId).reduce((p, c) => { p[c] = '*'; return p }, {}),
         }
     },
     fabric: obj => {
@@ -65,11 +65,11 @@ export const configResolver = {
             authors: obj.authors.map(x => x.name ?? x),
             description: obj.description,
             logo: obj.icon,
-            depends: Object.keys(obj.depends ?? {}),
-            recommends: Object.keys(obj.recommends ?? {}),
-            suggests: Object.keys(obj.suggests ?? {}),
-            breaks: Object.keys(obj.breaks ?? {}),
-            conflicts: Object.keys(obj.conflicts ?? {}),
+            depends: obj.depends ?? {},
+            recommends: obj.recommends ?? {},
+            suggests: obj.suggests ?? {},
+            breaks: obj.breaks ?? {},
+            conflicts: obj.conflicts ?? {},
         }
     },
     neoforge: obj => {
@@ -81,10 +81,10 @@ export const configResolver = {
             authors: mod.authors.split(', '),
             logo: mod.logoFile,
             description: obj.description ?? mod.description,
-            depends: depends.filter(x => !x.type || x.type.toLowerCase() == 'required').map(x => x.modId),
-            recommends: depends.filter(x => x.type.toLowerCase() == 'optional').map(x => x.modId),
-            breaks: depends.filter(x => x.type.toLowerCase() == 'incompatible').map(x => x.modId),
-            conflicts: depends.filter(x => x.type.toLowerCase() == 'discouraged').map(x => x.modId),
+            depends: depends.filter(x => !x.type || x.type.toLowerCase() == 'required').map(x => x.modId).reduce((p, c) => { p[c] = '*'; return p }, {}),//Forge not support version check.,
+            recommends: depends.filter(x => x.type.toLowerCase() == 'optional').map(x => x.modId).reduce((p, c) => { p[c] = '*'; return p }, {}),
+            breaks: depends.filter(x => x.type.toLowerCase() == 'incompatible').map(x => x.modId).reduce((p, c) => { p[c] = '*'; return p }, {}),
+            conflicts: depends.filter(x => x.type.toLowerCase() == 'discouraged').map(x => x.modId).reduce((p, c) => { p[c] = '*'; return p }, {}),
         }
     },
 }
