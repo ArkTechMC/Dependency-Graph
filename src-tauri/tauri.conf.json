@@ -15,11 +15,13 @@
       "all": false,
       "dialog": {
         "all": false,
-        "open": true
+        "open": true,
+        "save": true
       },
       "fs": {
         "all": false,
         "readDir": true,
+        "writeFile": true,
         "scope": [
           "**"
         ]

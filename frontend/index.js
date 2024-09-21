@@ -10,6 +10,7 @@ let currentLoader = 'fabric', currentDisplayMod = 'unknown'
 
 window.onload = async _ => {
   document.getElementById("open-folder").onclick = openModFolder
+  document.getElementById("export-list").onclick = exportModList
   tauri.event.listen('mod-config-read', e => {
     let index = processingFiles.indexOf(e.payload.file)
     if (index == -1) return
@@ -245,6 +246,25 @@ const openModFolder = async _ => {
   })
   if (!selected) return
   loadMods(selected)
+}
+
+const exportModList = async _ => {
+  const selected = await tauri.dialog.save({
+    filters: [{
+      name: 'export-modlist',
+      extensions: ['json']
+    }]
+  })
+  if (!selected) return
+  await tauri.fs.writeTextFile(selected, JSON.stringify(Object.values(modData).reduce((p, c) => {
+    if (c.id && c.name && c.version)
+      p.push({
+        modid: c.id,
+        name: c.name,
+        version: c.version
+      })
+    return p
+  }, []), null, '\t'))
 }
 
 const updateLoadingStatus = _ => {
